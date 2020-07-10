@@ -35,6 +35,7 @@ import kotlinx.android.synthetic.main.dialog_person.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -47,6 +48,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var personAdapter: PersonAdapter
     private var userIsAdmin = false
     private var userUsername: String? = ""
+    private var jobDelete: Job? = null
+    private var jobUpdate: Job? = null
+    private var jobCreate: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -128,13 +132,13 @@ class MainActivity : AppCompatActivity() {
 
         if (userIsAdmin)
             observerFirestoreTickets()
-        else{
+        else {
             observerDBTickets()
         }
 
     }
 
-    private fun observerDBTickets(){
+    private fun observerDBTickets() {
         viewModel.getTicketsByUserDB(userUsername ?: "null").observe(this, Observer { tickets ->
             txt_total_tickets.text = "Total: ${tickets.size}"
             personAdapter.differ.submitList(tickets)
@@ -272,7 +276,7 @@ class MainActivity : AppCompatActivity() {
                         persons.add(person)
                     }
                     personAdapter.differ.submitList(persons)
-                    txt_total_tickets.text = "Total: ${persons.size-1}"
+                    txt_total_tickets.text = "Total: ${persons.size - 1}"
                     hideLoading()
                 }
             }
@@ -287,26 +291,29 @@ class MainActivity : AppCompatActivity() {
         return personQuery.documents[0].toObject<Person>()
     }
 
-    private fun deletePerson(id: String) = CoroutineScope(IO).launch {
+    private fun deletePerson(id: String) {
+        jobDelete = CoroutineScope(IO).launch {
 
-        try {
-            personCollectionRef.document(id).delete().await()
-            withContext(Main) {
-                Snackbar.make(
-                    Constraint_layout_parent,
-                    "Boleto eliminado correctamente",
-                    Snackbar.LENGTH_SHORT
-                ).show()
-            }
-        } catch (e: Exception) {
-            withContext(Main) {
-                Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show()
+            try {
+                personCollectionRef.document(id).delete().await()
+                withContext(Main) {
+                    Snackbar.make(
+                        Constraint_layout_parent,
+                        "Boleto eliminado correctamente",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                }
+            } catch (e: Exception) {
+                withContext(Main) {
+                    Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
 
-    private fun updatePerson(person: Person, dialog: AlertDialog, successMessage: String) =
-        CoroutineScope(IO).launch {
+
+    private fun updatePerson(person: Person, dialog: AlertDialog, successMessage: String) {
+        jobUpdate = CoroutineScope(IO).launch {
             try {
                 personCollectionRef.document(id).set(
                     person,
@@ -330,9 +337,11 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
+    }
 
-    private fun savePerson(person: Person, dialog: AlertDialog, successMessage: String) =
-        CoroutineScope(IO).launch {
+
+    private fun savePerson(person: Person, dialog: AlertDialog, successMessage: String) {
+        jobCreate = CoroutineScope(IO).launch {
             val isTicketAssigned = isTicketAssigned(person.ticketNumber)
             if (isTicketAssigned) {
                 withContext(Main) {
@@ -365,6 +374,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
 
     private suspend fun isTicketAssigned(tickerNumber: Number): Boolean {
         var isTicketAssigned = false
@@ -441,13 +452,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        collection.remove()
+        if (userIsAdmin)
+            collection.remove()
         super.onStop()
     }
 
     override fun onPause() {
-        collection.remove()
+        if (userIsAdmin)
+            collection.remove()
         super.onPause()
+    }
+
+    override fun onDestroy() {
+        jobUpdate?.cancel()
+        jobDelete?.cancel()
+        jobCreate?.cancel()
+        super.onDestroy()
     }
 
 }
