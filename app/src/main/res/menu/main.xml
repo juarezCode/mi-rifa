@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_refresh"
+        android:orderInCategory="100"
+        android:title="Actualizar"
+        android:icon="@drawable/ic_refresh"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_search_ticket"
+        android:orderInCategory="100"
+        android:title="Agregar Usuarios"
+        android:icon="@drawable/ic_search"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_add_user"
+        android:orderInCategory="100"
+        android:title="Admin Usuarios"
+        android:icon="@drawable/ic_add"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_close_sesion"
+        android:orderInCategory="100"
+        android:title="Cerrar Sesión"
+        android:icon="@drawable/ic_edit"
+        app:showAsAction="never" />
+</menu>

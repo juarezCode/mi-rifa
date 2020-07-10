@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "532289350404",
+    "firebase_url": "https://kt-firestone-firebase.firebaseio.com",
+    "project_id": "kt-firestone-firebase",
+    "storage_bucket": "kt-firestone-firebase.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532289350404:android:24627625b1130cbfa9be51",
+        "android_client_info": {
+          "package_name": "com.juarez.ktfirestonefirebase"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "532289350404-j5se77r31ojtgbsk7m22cgaj8fls0er4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD80pau4q8xkwi46gILzBO93SZFn7WoXCs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532289350404-j5se77r31ojtgbsk7m22cgaj8fls0er4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
