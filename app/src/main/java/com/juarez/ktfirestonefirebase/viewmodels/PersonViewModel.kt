@@ -20,9 +20,15 @@ class PersonViewModel(private val personRepository: PersonRepository) : ViewMode
         personRepository.upsertTickets(persons)
     }
 
+    suspend fun checkTicketsByUser(user: String): List<Person> = personRepository.checkTicketsByUser(user)
+
+    suspend fun checkAllTickets(): List<Person> = personRepository.checkAllTickets()
+
     fun getAllTicketsDB() = personRepository.getTickets()
 
     fun getTicketsByUserDB(user: String) = personRepository.getTicketsByUser(user)
 
     fun searchByTicket(ticket: Int) = personRepository.searchByTicket(ticket)
+
+    fun searchByField(query: String) = personRepository.searchByField(query)
 }

@@ -65,10 +65,30 @@ class MainActivity : AppCompatActivity() {
         val userName = intent.getStringExtra("name")
         supportActionBar?.title = "Hola $userName"
         setupRecyclerView(userIsAdmin)
-        if (userIsAdmin)
-            getAllTicketsFirestore()
-        else
-            getTickets()
+
+        if (userIsAdmin) {
+            CoroutineScope(IO).launch {
+                val tickets = viewModel.checkAllTickets()
+                if (tickets.isEmpty()) {
+                    getAllTicketsFirestore()
+                } else {
+                    withContext(Main) {
+                        hideLoading()
+                    }
+                }
+            }
+        } else {
+            CoroutineScope(IO).launch {
+                val tickets = viewModel.checkTicketsByUser(userUsername ?: "")
+                if (tickets.isEmpty()) {
+                    getTickets()
+                } else {
+                    withContext(Main) {
+                        hideLoading()
+                    }
+                }
+            }
+        }
 
         fab_add_person.setOnClickListener {
 

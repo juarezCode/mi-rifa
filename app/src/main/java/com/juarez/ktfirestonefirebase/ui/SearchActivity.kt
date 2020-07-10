@@ -6,7 +6,6 @@ import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
@@ -88,11 +87,11 @@ class SearchActivity : AppCompatActivity() {
                         showLoading()
                         if (filterSearch == "ticketNumber") {
                             if (userIsAdmin)
-                                search(filterSearch, editable.toString().toInt())
+                                searchTicketInDB(editable.toString().toInt())
                             else
-                                searchInDB(editable.toString().toInt())
+                                searchTicketInDB(editable.toString().toInt())
                         } else {
-                            search(filterSearch, editable.toString())
+                            searchFieldsInDB(editable.toString())
                         }
                     } else {
                         personAdapter.differ.submitList(listOf())
@@ -229,10 +228,9 @@ class SearchActivity : AppCompatActivity() {
                     dialog.dialog_p_btn_ok.isEnabled = true
                 }
             }
-
         }
 
-    private fun searchInDB(ticket: Int) {
+    private fun searchTicketInDB(ticket: Int) {
         viewModel.searchByTicket(ticket).observe(this, Observer { tickets ->
             if (tickets.isNotEmpty()) {
                 personAdapter.differ.submitList(tickets)
@@ -245,46 +243,19 @@ class SearchActivity : AppCompatActivity() {
         })
     }
 
-    private fun search(field: String, query: Any) =
-        CoroutineScope(Dispatchers.IO).launch {
-
-            try {
-                val userSearch = personCollectionRef
-                    .limit(30)
-                    .whereEqualTo(field, query)
-                    .get()
-                    .await()
-
-                withContext(Main) {
-                    if (userSearch.documents.isNotEmpty()) {
-                        hideLabel()
-
-                        userSearch?.let {
-                            val persons = arrayListOf<Person>()
-                            for (document in it) {
-                                val person = document.toObject<Person>()
-                                persons.add(person)
-                            }
-
-                            withContext(Main) {
-                                personAdapter.differ.submitList(persons)
-                            }
-                        }
-
-                    } else {
-                        personAdapter.differ.submitList(arrayListOf())
-                        showLabel()
-                    }
-                    hideLoading()
-                }
-            } catch (e: Exception) {
-                withContext(Main) {
-                    hideLoading()
-                    showToastErrorFirestore(this@SearchActivity, e.message.toString())
-                }
+    private fun searchFieldsInDB(query: String) {
+        viewModel.searchByField(query).observe(this, Observer { tickets ->
+            if (tickets.isNotEmpty()) {
+                personAdapter.differ.submitList(tickets)
+                hideLabel()
+            } else {
+                personAdapter.differ.submitList(arrayListOf())
+                showLabel()
             }
+            hideLoading()
+        })
+    }
 
-        }
 
     private suspend fun getPerson(ticketNumber: Int): Person? {
         val personQuery = personCollectionRef
