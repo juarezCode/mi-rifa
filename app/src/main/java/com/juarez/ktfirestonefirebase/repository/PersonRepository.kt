@@ -7,6 +7,8 @@ class PersonRepository(private val db: TicketDatabase) {
 
     suspend fun upsert(person: Person) = db.getTicketDao().upsert(person)
 
+    suspend fun deleteTicket(person: Person) = db.getTicketDao().deleteTicket(person)
+
     suspend fun upsertTickets(persons: List<Person>) = db.getTicketDao().upsertTickets(persons)
 
     fun getTickets() = db.getTicketDao().getAllTickets()

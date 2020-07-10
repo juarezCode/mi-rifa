@@ -16,7 +16,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
@@ -43,7 +42,6 @@ import kotlinx.coroutines.withContext
 class MainActivity : AppCompatActivity() {
     private val personCollectionRef = Firebase.firestore.collection("persons")
     private lateinit var viewModel: PersonViewModel
-    private lateinit var collection: ListenerRegistration
     private var id = ""
     private lateinit var personAdapter: PersonAdapter
     private var userIsAdmin = false
@@ -51,6 +49,8 @@ class MainActivity : AppCompatActivity() {
     private var jobDelete: Job? = null
     private var jobUpdate: Job? = null
     private var jobCreate: Job? = null
+    private var jobGetTickets: Job? = null
+    private var jobGetAllTickets: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +65,9 @@ class MainActivity : AppCompatActivity() {
         val userName = intent.getStringExtra("name")
         supportActionBar?.title = "Hola $userName"
         setupRecyclerView(userIsAdmin)
-        if (!userIsAdmin)
+        if (userIsAdmin)
+            getAllTicketsFirestore()
+        else
             getTickets()
 
         fab_add_person.setOnClickListener {
@@ -104,7 +106,7 @@ class MainActivity : AppCompatActivity() {
                 val personSaved = getPerson(it.ticketNumber)
                 withContext(Main) {
                     if (personSaved != null) {
-                        deletePerson(id)
+                        deletePerson(id, personSaved)
                     } else {
                         Toast.makeText(
                             this@MainActivity,
@@ -131,22 +133,56 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (userIsAdmin)
-            observerFirestoreTickets()
-        else {
             observerDBTickets()
+        else {
+            observerDBTicketsByUser()
         }
 
     }
 
-    private fun observerDBTickets() {
+    private fun observerDBTicketsByUser() {
         viewModel.getTicketsByUserDB(userUsername ?: "null").observe(this, Observer { tickets ->
             txt_total_tickets.text = "Total: ${tickets.size}"
             personAdapter.differ.submitList(tickets)
         })
     }
 
-    private fun getTickets() =
-        CoroutineScope(IO).launch {
+    private fun observerDBTickets() {
+        viewModel.getAllTicketsDB().observe(this, Observer { tickets ->
+            txt_total_tickets.text = "Total: ${tickets.size}"
+            personAdapter.differ.submitList(tickets)
+        })
+    }
+
+    private fun getAllTicketsFirestore() {
+        jobGetAllTickets = CoroutineScope(IO).launch {
+            withContext(Main) {
+                showLoading()
+            }
+            try {
+                val querySnapshot = personCollectionRef.get().await()
+                val persons = arrayListOf<Person>()
+
+                querySnapshot?.let {
+                    for (document in it) {
+                        val person = document.toObject<Person>()
+                        persons.add(person)
+                    }
+                    viewModel.savePersons(persons)
+                    withContext(Main) {
+                        hideLoading()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Main) {
+                    Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun getTickets() {
+        jobGetTickets = CoroutineScope(IO).launch {
             withContext(Main) {
                 showLoading()
             }
@@ -182,6 +218,8 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
+    }
+
 
     private fun showDialogUpsert(
         personSaved: Person?,
@@ -260,6 +298,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /*
     private fun observerFirestoreTickets() {
         collection = personCollectionRef
             .orderBy("ticketNumber")
@@ -281,6 +320,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
     }
+     */
 
     private suspend fun getPerson(ticketNumber: Int): Person? {
         val personQuery = personCollectionRef
@@ -291,11 +331,12 @@ class MainActivity : AppCompatActivity() {
         return personQuery.documents[0].toObject<Person>()
     }
 
-    private fun deletePerson(id: String) {
+    private fun deletePerson(id: String, person: Person) {
         jobDelete = CoroutineScope(IO).launch {
 
             try {
                 personCollectionRef.document(id).delete().await()
+                viewModel.deletePerson(person)
                 withContext(Main) {
                     Snackbar.make(
                         Constraint_layout_parent,
@@ -319,6 +360,7 @@ class MainActivity : AppCompatActivity() {
                     person,
                     SetOptions.merge()
                 ).await()
+                viewModel.savePerson(person)
                 withContext(Main) {
                     Snackbar.make(
                         Constraint_layout_parent,
@@ -421,11 +463,11 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_refresh -> {
-                if (!userIsAdmin)
-                    getTickets()
+                if (userIsAdmin)
+                    getAllTicketsFirestore()
                 else
-                    Toast.makeText(this@MainActivity, "Ya esta actualizado", Toast.LENGTH_SHORT)
-                        .show()
+                    getTickets()
+
                 return true
             }
             R.id.action_add_user -> {
@@ -451,22 +493,12 @@ class MainActivity : AppCompatActivity() {
         //super.onBackPressed()
     }
 
-    override fun onStop() {
-        if (userIsAdmin)
-            collection.remove()
-        super.onStop()
-    }
-
-    override fun onPause() {
-        if (userIsAdmin)
-            collection.remove()
-        super.onPause()
-    }
-
     override fun onDestroy() {
         jobUpdate?.cancel()
         jobDelete?.cancel()
         jobCreate?.cancel()
+        jobGetTickets?.cancel()
+        jobGetAllTickets?.cancel()
         super.onDestroy()
     }
 

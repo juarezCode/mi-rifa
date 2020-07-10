@@ -34,7 +34,10 @@ class LoginActivity : AppCompatActivity() {
         btn_login.setOnClickListener {
             val username = edt_login_username.text.toString()
             val password = edt_login_password.text.toString()
-            login(username, password)
+            if (username.isEmpty() || password.isEmpty())
+                btn_login.isEnabled = false
+            else
+                login(username, password)
         }
     }
 

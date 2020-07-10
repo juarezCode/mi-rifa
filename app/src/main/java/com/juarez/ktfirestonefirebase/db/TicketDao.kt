@@ -7,7 +7,7 @@ import com.juarez.ktfirestonefirebase.models.Person
 @Dao
 interface TicketDao {
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(person: Person)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -21,4 +21,7 @@ interface TicketDao {
 
     @Query("SELECT * FROM persons WHERE ticketNumber IN (:ticket)")
     fun searchByTicket(ticket: Int): LiveData<List<Person>>
+
+    @Delete
+    suspend fun deleteTicket(person: Person)
 }

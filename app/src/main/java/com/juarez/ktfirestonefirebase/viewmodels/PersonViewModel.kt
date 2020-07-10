@@ -12,11 +12,15 @@ class PersonViewModel(private val personRepository: PersonRepository) : ViewMode
         personRepository.upsert(person)
     }
 
+    fun deletePerson(person: Person) = viewModelScope.launch {
+        personRepository.deleteTicket(person)
+    }
+
     fun savePersons(persons: List<Person>) = viewModelScope.launch {
         personRepository.upsertTickets(persons)
     }
 
-    fun getTicketsDB() = personRepository.getTickets()
+    fun getAllTicketsDB() = personRepository.getTickets()
 
     fun getTicketsByUserDB(user: String) = personRepository.getTicketsByUser(user)
 

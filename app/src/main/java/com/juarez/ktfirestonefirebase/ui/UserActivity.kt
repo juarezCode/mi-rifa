@@ -293,13 +293,8 @@ class UserActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onStop() {
+    override fun onDestroy() {
         collection.remove()
-        super.onStop()
-    }
-
-    override fun onPause() {
-        collection.remove()
-        super.onPause()
+        super.onDestroy()
     }
 }

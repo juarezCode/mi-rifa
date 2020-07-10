@@ -128,7 +128,7 @@ class SearchActivity : AppCompatActivity() {
                 val personSaved = getPerson(it.ticketNumber)
                 withContext(Main) {
                     if (personSaved != null) {
-                        deletePerson(id)
+                        deletePerson(id, personSaved)
                     } else {
                         showToastErrorSearchTicket(this@SearchActivity)
                     }
@@ -215,6 +215,7 @@ class SearchActivity : AppCompatActivity() {
                     person,
                     SetOptions.merge()
                 ).await()
+                viewModel.savePerson(person)
                 withContext(Main) {
                     showToastSuccessUpdatePerson(this@SearchActivity)
                     dialog.progress_bar_person.visibility = View.GONE
@@ -294,10 +295,11 @@ class SearchActivity : AppCompatActivity() {
         return personQuery.documents[0].toObject<Person>()
     }
 
-    private fun deletePerson(id: String) = CoroutineScope(Dispatchers.IO).launch {
+    private fun deletePerson(id: String, person: Person) = CoroutineScope(Dispatchers.IO).launch {
 
         try {
             personCollectionRef.document(id).delete().await()
+            viewModel.deletePerson(person)
             withContext(Main) {
                 showToastSuccessDeletePerson(this@SearchActivity)
                 finish()
@@ -305,27 +307,6 @@ class SearchActivity : AppCompatActivity() {
         } catch (e: Exception) {
             withContext(Main) {
                 showToastErrorFirestore(this@SearchActivity, e.message.toString())
-            }
-        }
-    }
-
-    private fun getAllPersons() = CoroutineScope(Dispatchers.IO).launch {
-        try {
-            val querySnapshot = personCollectionRef.get().await()
-            val persons = arrayListOf<Person>()
-
-            querySnapshot?.let {
-                for (document in it) {
-                    val person = document.toObject<Person>()
-                    persons.add(person)
-                }
-            }
-            withContext(Main) {
-                personAdapter.differ.submitList(persons)
-            }
-        } catch (e: Exception) {
-            withContext(Main) {
-                Toast.makeText(this@SearchActivity, e.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
