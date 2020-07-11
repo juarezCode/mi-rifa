@@ -86,14 +86,12 @@ class SearchActivity : AppCompatActivity() {
                     if (editable.toString().isNotEmpty()) {
                         showLoading()
                         if (filterSearch == "ticketNumber") {
-                            if (userIsAdmin)
-                                searchTicketInDB(editable.toString().toInt())
-                            else
-                                searchTicketInDB(editable.toString().toInt())
+                            searchTicketInDB(editable.toString().toInt())
                         } else {
                             searchFieldsInDB(editable.toString())
                         }
                     } else {
+                        txt_search_number_coincidences.text = "Coincidencias: 0"
                         personAdapter.differ.submitList(listOf())
                         hideLoading()
                         hideLabel()
@@ -233,6 +231,7 @@ class SearchActivity : AppCompatActivity() {
     private fun searchTicketInDB(ticket: Int) {
         viewModel.searchByTicket(ticket).observe(this, Observer { tickets ->
             if (tickets.isNotEmpty()) {
+                txt_search_number_coincidences.text = "Coincidencias ${tickets.size}"
                 personAdapter.differ.submitList(tickets)
                 hideLabel()
             } else {
@@ -246,6 +245,7 @@ class SearchActivity : AppCompatActivity() {
     private fun searchFieldsInDB(query: String) {
         viewModel.searchByField(query).observe(this, Observer { tickets ->
             if (tickets.isNotEmpty()) {
+                txt_search_number_coincidences.text = "Coincidencias ${tickets.size}"
                 personAdapter.differ.submitList(tickets)
                 hideLabel()
             } else {

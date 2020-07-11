@@ -62,7 +62,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/edt_search"
+        app:layout_constraintTop_toBottomOf="@+id/txt_search_number_coincidences"
         tools:itemCount="10"
         tools:listitem="@layout/item_person" />
 
@@ -88,4 +88,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/txt_search_number_coincidences"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Coincidencias: 0"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/edt_search" />
 </androidx.constraintlayout.widget.ConstraintLayout>
