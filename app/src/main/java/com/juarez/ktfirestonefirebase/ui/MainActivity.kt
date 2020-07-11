@@ -3,19 +3,16 @@ package com.juarez.ktfirestonefirebase.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log.d
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
@@ -24,10 +21,15 @@ import com.juarez.ktfirestonefirebase.R
 import com.juarez.ktfirestonefirebase.adapters.PersonAdapter
 import com.juarez.ktfirestonefirebase.db.TicketDatabase
 import com.juarez.ktfirestonefirebase.models.Person
-import com.juarez.ktfirestonefirebase.repository.PersonRepository
+import com.juarez.ktfirestonefirebase.repository.TicketRepository
+import com.juarez.ktfirestonefirebase.util.Messages.Companion.showSnackBarSuccessDeletePerson
+import com.juarez.ktfirestonefirebase.util.Messages.Companion.showSnackBarSuccessUpsert
+import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastDowloading
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorFirestore
-import com.juarez.ktfirestonefirebase.viewmodels.PersonViewModel
-import com.juarez.ktfirestonefirebase.viewmodels.PersonViewModelProviderFactory
+import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorSearchTicket
+import com.juarez.ktfirestonefirebase.util.MyConstants.Companion.TITLE_MAIN_ACTIVITY
+import com.juarez.ktfirestonefirebase.viewmodels.TicketViewModel
+import com.juarez.ktfirestonefirebase.viewmodels.TicketViewModelProviderFactory
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.dialog_person.*
 import kotlinx.android.synthetic.main.dialog_person.view.*
@@ -41,7 +43,7 @@ import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
     private val personCollectionRef = Firebase.firestore.collection("persons")
-    private lateinit var viewModel: PersonViewModel
+    private lateinit var viewModel: TicketViewModel
     private var id = ""
     private lateinit var personAdapter: PersonAdapter
     private var userIsAdmin = false
@@ -55,20 +57,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val personRepository = PersonRepository(TicketDatabase(this))
-        val viewModelProviderFactory = PersonViewModelProviderFactory(personRepository)
+        val personRepository = TicketRepository(TicketDatabase(this))
+        val viewModelProviderFactory = TicketViewModelProviderFactory(personRepository)
         viewModel =
-            ViewModelProvider(this, viewModelProviderFactory).get(PersonViewModel::class.java)
+            ViewModelProvider(this, viewModelProviderFactory).get(TicketViewModel::class.java)
 
         userIsAdmin = intent.getBooleanExtra("isAdmin", false)
         userUsername = intent.getStringExtra("username")
         val userName = intent.getStringExtra("name")
-        supportActionBar?.title = "Hola $userName"
+        supportActionBar?.title = TITLE_MAIN_ACTIVITY + userName
         setupRecyclerView(userIsAdmin)
 
         if (userIsAdmin) {
             CoroutineScope(IO).launch {
-                val tickets = viewModel.checkAllTickets()
+                val tickets = viewModel.checkAllTicketsDB()
                 if (tickets.isEmpty()) {
                     getAllTicketsFirestore()
                 } else {
@@ -79,7 +81,7 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             CoroutineScope(IO).launch {
-                val tickets = viewModel.checkTicketsByUser(userUsername ?: "")
+                val tickets = viewModel.checkTicketsByUserDB(userUsername ?: "")
                 if (tickets.isEmpty()) {
                     getTickets()
                 } else {
@@ -108,12 +110,7 @@ class MainActivity : AppCompatActivity() {
                             "Boleto actualizado exitosamente"
                         )
                     } else {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "No se encontro a el boleto",
-                            Toast.LENGTH_LONG
-                        )
-                            .show()
+                        showToastErrorSearchTicket(this@MainActivity)
                     }
 
                 }
@@ -128,12 +125,7 @@ class MainActivity : AppCompatActivity() {
                     if (personSaved != null) {
                         deletePerson(id, personSaved)
                     } else {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "No se encontro a el boleto",
-                            Toast.LENGTH_LONG
-                        )
-                            .show()
+                        showToastErrorSearchTicket(this@MainActivity)
                     }
                     hideLoading()
                 }
@@ -162,14 +154,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun observerDBTicketsByUser() {
         viewModel.getTicketsByUserDB(userUsername ?: "null").observe(this, Observer { tickets ->
-            txt_total_tickets.text = "Total: ${tickets.size}"
+            txt_total_tickets_number.text = tickets.size.toString()
             personAdapter.differ.submitList(tickets)
         })
     }
 
     private fun observerDBTickets() {
         viewModel.getAllTicketsDB().observe(this, Observer { tickets ->
-            txt_total_tickets.text = "Total: ${tickets.size}"
+            txt_total_tickets_number.text = tickets.size.toString()
             personAdapter.differ.submitList(tickets)
         })
     }
@@ -177,6 +169,7 @@ class MainActivity : AppCompatActivity() {
     private fun getAllTicketsFirestore() {
         jobGetAllTickets = CoroutineScope(IO).launch {
             withContext(Main) {
+                showToastDowloading(this@MainActivity)
                 showLoading()
             }
             try {
@@ -188,14 +181,14 @@ class MainActivity : AppCompatActivity() {
                         val person = document.toObject<Person>()
                         persons.add(person)
                     }
-                    viewModel.savePersons(persons)
+                    viewModel.savePersonsDB(persons)
                     withContext(Main) {
                         hideLoading()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Main) {
-                    Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_SHORT).show()
+                    showToastErrorFirestore(this@MainActivity, e.message.toString())
                 }
             }
         }
@@ -204,6 +197,7 @@ class MainActivity : AppCompatActivity() {
     private fun getTickets() {
         jobGetTickets = CoroutineScope(IO).launch {
             withContext(Main) {
+                showToastDowloading(this@MainActivity)
                 showLoading()
             }
 
@@ -221,7 +215,7 @@ class MainActivity : AppCompatActivity() {
                             val person = document.toObject<Person>()
                             persons.add(person)
                         }
-                        viewModel.savePersons(persons)
+                        viewModel.savePersonsDB(persons)
 
                     }
                 } else {
@@ -233,7 +227,6 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 withContext(Main) {
                     showToastErrorFirestore(this@MainActivity, e.message.toString())
-                    d("error", e.message.toString())
                 }
             }
 
@@ -356,17 +349,13 @@ class MainActivity : AppCompatActivity() {
 
             try {
                 personCollectionRef.document(id).delete().await()
-                viewModel.deletePerson(person)
+                viewModel.deletePersonDB(person)
                 withContext(Main) {
-                    Snackbar.make(
-                        Constraint_layout_parent,
-                        "Boleto eliminado correctamente",
-                        Snackbar.LENGTH_SHORT
-                    ).show()
+                    showSnackBarSuccessDeletePerson(Constraint_layout_parent)
                 }
             } catch (e: Exception) {
                 withContext(Main) {
-                    Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show()
+                    showToastErrorFirestore(this@MainActivity, e.message.toString())
                 }
             }
         }
@@ -380,19 +369,15 @@ class MainActivity : AppCompatActivity() {
                     person,
                     SetOptions.merge()
                 ).await()
-                viewModel.savePerson(person)
+                viewModel.savePersonDB(person)
                 withContext(Main) {
-                    Snackbar.make(
-                        Constraint_layout_parent,
-                        successMessage,
-                        Snackbar.LENGTH_SHORT
-                    ).show()
+                    showSnackBarSuccessUpsert(Constraint_layout_parent, successMessage)
                     dialog.progress_bar_person.visibility = View.GONE
                     dialog.dismiss()
                 }
             } catch (e: Exception) {
                 withContext(Main) {
-                    Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show()
+                    showToastErrorFirestore(this@MainActivity, e.message.toString())
                     dialog.progress_bar_person.visibility = View.GONE
                     dialog.dialog_p_btn_ok.isEnabled = true
                 }
@@ -416,18 +401,14 @@ class MainActivity : AppCompatActivity() {
             } else {
                 try {
                     personCollectionRef.add(person).await()
-                    viewModel.savePerson(person)
+                    viewModel.savePersonDB(person)
                     withContext(Main) {
-                        Snackbar.make(
-                            Constraint_layout_parent,
-                            successMessage,
-                            Snackbar.LENGTH_SHORT
-                        ).show()
+                        showSnackBarSuccessUpsert(Constraint_layout_parent, successMessage)
                         dialog.dismiss()
                     }
                 } catch (e: Exception) {
                     withContext(Main) {
-                        Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_SHORT).show()
+                        showToastErrorFirestore(this@MainActivity, e.message.toString())
                     }
                 }
                 withContext(Main) {

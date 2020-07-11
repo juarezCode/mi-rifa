@@ -17,6 +17,11 @@ class Messages {
                 .show()
         }
 
+        fun showToastDowloading(context: Context) {
+            Toast.makeText(context, "Descargando... por favor espere.", Toast.LENGTH_LONG)
+                .show()
+        }
+
         fun showToastErrorFirestore(context: Context, message: String) {
             Toast.makeText(context, message, Toast.LENGTH_SHORT)
                 .show()

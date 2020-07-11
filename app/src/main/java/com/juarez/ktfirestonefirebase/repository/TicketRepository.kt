@@ -3,7 +3,7 @@ package com.juarez.ktfirestonefirebase.repository
 import com.juarez.ktfirestonefirebase.db.TicketDatabase
 import com.juarez.ktfirestonefirebase.models.Person
 
-class PersonRepository(private val db: TicketDatabase) {
+class TicketRepository(private val db: TicketDatabase) {
 
     suspend fun upsert(person: Person) = db.getTicketDao().upsert(person)
 

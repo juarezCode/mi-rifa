@@ -21,6 +21,7 @@ import com.juarez.ktfirestonefirebase.util.Messages.Companion.showSnackBarSucces
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showSnackBarSuccessUpsert
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorFirestore
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorUser
+import com.juarez.ktfirestonefirebase.util.MyConstants.Companion.TITLE_USER_ACTIVITY
 import kotlinx.android.synthetic.main.activity_user.*
 import kotlinx.android.synthetic.main.dialog_user.*
 import kotlinx.android.synthetic.main.dialog_user.view.*
@@ -93,24 +94,25 @@ class UserActivity : AppCompatActivity() {
     }
 
     private fun subscribeToUsers() {
-        collection = userCollectionRef.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
-            firebaseFirestoreException?.let {
-                showToastErrorFirestore(this@UserActivity, it.toString())
-                return@addSnapshotListener
-            }
-            querySnapshot?.let {
-                val users = arrayListOf<User>()
-                for (document in it) {
-                    val user = document.toObject<User>()
-                    if (!user.admin) {
-                        users.add(user)
-                    }
-
+        collection =
+            userCollectionRef.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
+                firebaseFirestoreException?.let {
+                    showToastErrorFirestore(this@UserActivity, it.toString())
+                    return@addSnapshotListener
                 }
-                userAdapter.differ.submitList(users)
+                querySnapshot?.let {
+                    val users = arrayListOf<User>()
+                    for (document in it) {
+                        val user = document.toObject<User>()
+                        if (!user.admin) {
+                            users.add(user)
+                        }
+
+                    }
+                    userAdapter.differ.submitList(users)
+                }
+                hideLoading()
             }
-            hideLoading()
-        }
     }
 
     private fun deleteUser(id: String) = CoroutineScope(IO).launch {
@@ -283,7 +285,7 @@ class UserActivity : AppCompatActivity() {
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowHomeEnabled(true)
-            title = "Administrar Usuarios"
+            title = TITLE_USER_ACTIVITY
         }
     }
 

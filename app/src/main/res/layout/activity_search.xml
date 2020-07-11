@@ -5,6 +5,7 @@
     android:id="@+id/constraint_layout_search"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorBackground"
     tools:context=".ui.SearchActivity">
 
     <RadioGroup
@@ -22,25 +23,26 @@
             android:layout_height="wrap_content"
             android:checked="true"
             android:text="boleto" />
+
         <RadioButton
             android:id="@+id/radio_option_user"
-            android:checked="false"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:checked="false"
             android:text="usuario" />
 
         <RadioButton
             android:id="@+id/radio_option_name"
-            android:checked="false"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:checked="false"
             android:text="nombre" />
 
         <RadioButton
             android:id="@+id/radio_option_address"
-            android:checked="false"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:checked="false"
             android:text="domicilio" />
     </RadioGroup>
 

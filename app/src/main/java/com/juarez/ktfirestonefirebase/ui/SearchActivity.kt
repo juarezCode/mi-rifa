@@ -20,13 +20,14 @@ import com.juarez.ktfirestonefirebase.R
 import com.juarez.ktfirestonefirebase.adapters.PersonAdapter
 import com.juarez.ktfirestonefirebase.db.TicketDatabase
 import com.juarez.ktfirestonefirebase.models.Person
-import com.juarez.ktfirestonefirebase.repository.PersonRepository
+import com.juarez.ktfirestonefirebase.repository.TicketRepository
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorFirestore
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorSearchTicket
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastSuccessDeletePerson
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastSuccessUpdatePerson
-import com.juarez.ktfirestonefirebase.viewmodels.PersonViewModel
-import com.juarez.ktfirestonefirebase.viewmodels.PersonViewModelProviderFactory
+import com.juarez.ktfirestonefirebase.util.MyConstants.Companion.TITLE_SEARCH_ACTIVITY
+import com.juarez.ktfirestonefirebase.viewmodels.TicketViewModel
+import com.juarez.ktfirestonefirebase.viewmodels.TicketViewModelProviderFactory
 import kotlinx.android.synthetic.main.activity_search.*
 import kotlinx.android.synthetic.main.dialog_person.*
 import kotlinx.android.synthetic.main.dialog_person.view.*
@@ -37,17 +38,17 @@ import kotlinx.coroutines.tasks.await
 class SearchActivity : AppCompatActivity() {
     private lateinit var personAdapter: PersonAdapter
     private val personCollectionRef = Firebase.firestore.collection("persons")
-    private lateinit var viewModel: PersonViewModel
+    private lateinit var viewModel: TicketViewModel
     private var id = ""
     private var filterSearch = "ticketNumber"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
-        val personRepository = PersonRepository(TicketDatabase(this))
-        val viewModelProviderFactory = PersonViewModelProviderFactory(personRepository)
+        val personRepository = TicketRepository(TicketDatabase(this))
+        val viewModelProviderFactory = TicketViewModelProviderFactory(personRepository)
         viewModel =
-            ViewModelProvider(this, viewModelProviderFactory).get(PersonViewModel::class.java)
+            ViewModelProvider(this, viewModelProviderFactory).get(TicketViewModel::class.java)
 
         val userIsAdmin = intent.getBooleanExtra("isAdmin", false)
         showBackButton()
@@ -212,7 +213,7 @@ class SearchActivity : AppCompatActivity() {
                     person,
                     SetOptions.merge()
                 ).await()
-                viewModel.savePerson(person)
+                viewModel.savePersonDB(person)
                 withContext(Main) {
                     showToastSuccessUpdatePerson(this@SearchActivity)
                     dialog.progress_bar_person.visibility = View.GONE
@@ -229,7 +230,7 @@ class SearchActivity : AppCompatActivity() {
         }
 
     private fun searchTicketInDB(ticket: Int) {
-        viewModel.searchByTicket(ticket).observe(this, Observer { tickets ->
+        viewModel.searchByTicketDB(ticket).observe(this, Observer { tickets ->
             if (tickets.isNotEmpty()) {
                 txt_search_number_coincidences.text = "Coincidencias ${tickets.size}"
                 personAdapter.differ.submitList(tickets)
@@ -243,7 +244,7 @@ class SearchActivity : AppCompatActivity() {
     }
 
     private fun searchFieldsInDB(query: String) {
-        viewModel.searchByField(query).observe(this, Observer { tickets ->
+        viewModel.searchByFieldDB(query).observe(this, Observer { tickets ->
             if (tickets.isNotEmpty()) {
                 txt_search_number_coincidences.text = "Coincidencias ${tickets.size}"
                 personAdapter.differ.submitList(tickets)
@@ -270,7 +271,7 @@ class SearchActivity : AppCompatActivity() {
 
         try {
             personCollectionRef.document(id).delete().await()
-            viewModel.deletePerson(person)
+            viewModel.deletePersonDB(person)
             withContext(Main) {
                 showToastSuccessDeletePerson(this@SearchActivity)
                 finish()
@@ -322,7 +323,7 @@ class SearchActivity : AppCompatActivity() {
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowHomeEnabled(true)
-            title = "Busqueda por:"
+            title = TITLE_SEARCH_ACTIVITY
         }
     }
 

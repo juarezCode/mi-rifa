@@ -15,6 +15,7 @@ import com.juarez.ktfirestonefirebase.R
 import com.juarez.ktfirestonefirebase.models.User
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorFirestore
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastLoginError
+import com.juarez.ktfirestonefirebase.util.MyConstants.Companion.TITLE_LOGIN_ACTIVITY
 import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +30,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-        supportActionBar?.title = "Iniciar Sesión"
+        supportActionBar?.title = TITLE_LOGIN_ACTIVITY
         addTextWatcher()
         btn_login.setOnClickListener {
             val username = edt_login_username.text.toString()
