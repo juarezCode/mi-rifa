@@ -45,9 +45,10 @@ class PersonAdapter(val isAdmin: Boolean) : RecyclerView.Adapter<PersonAdapter.P
     override fun onBindViewHolder(holder: PersonViewHolder, position: Int) {
         val person = differ.currentList[position]
         holder.itemView.apply {
-            txt_item_person_data.text =
-                "${person.name} ${person.firstSurname} ${person.secondSurname}\n" +
-                        "De: ${person.address}"
+            txt_item_person_name.text =
+                "${person.name} ${person.firstSurname} ${person.secondSurname}"
+
+            txt_item_person_address.text = "De: ${person.address}"
             txt_item_person_ticket_number.text = person.ticketNumber.toString()
             if (!isAdmin) {
                 item_person_btn_edit.visibility = View.GONE

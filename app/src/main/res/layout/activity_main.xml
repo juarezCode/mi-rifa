@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorBackground"
+    android:scrollbars="vertical"
     tools:context=".ui.MainActivity">
 
     <androidx.cardview.widget.CardView
@@ -56,6 +57,7 @@
         android:id="@+id/Constraint_layout_parent"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginTop="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -65,6 +67,7 @@
             android:id="@+id/recycler_view_person"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:scrollbars="vertical"
             tools:itemCount="5"
             tools:listitem="@layout/item_person" />
 

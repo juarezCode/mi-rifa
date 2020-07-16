@@ -8,7 +8,6 @@ import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
@@ -21,6 +20,7 @@ import com.juarez.ktfirestonefirebase.util.Messages.Companion.showSnackBarSucces
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showSnackBarSuccessUpsert
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorFirestore
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorUser
+import com.juarez.ktfirestonefirebase.util.MyConstants
 import com.juarez.ktfirestonefirebase.util.MyConstants.Companion.TITLE_USER_ACTIVITY
 import kotlinx.android.synthetic.main.activity_user.*
 import kotlinx.android.synthetic.main.dialog_user.*
@@ -68,18 +68,29 @@ class UserActivity : AppCompatActivity() {
         }
 
         userAdapter.setOnItemClickListenerDelete {
-            showLoading()
-            CoroutineScope(IO).launch {
-                val userSaved = getUser(it.username)
-                withContext(Main) {
-                    if (userSaved != null) {
-                        deleteUser(id)
-                    } else {
-                        showToastErrorUser(this@UserActivity)
+
+            val dialog = AlertDialog.Builder(this@UserActivity)
+                .setMessage(MyConstants.DIALOG_MESSAGE_DELETE_USER)
+            dialog.setNegativeButton("no") { dialog, _ ->
+                dialog.dismiss()
+            }
+            dialog.setPositiveButton("si") { dialog, _ ->
+                dialog.dismiss()
+                showLoading()
+                CoroutineScope(IO).launch {
+                    val userSaved = getUser(it.username)
+                    withContext(Main) {
+                        if (userSaved != null) {
+                            deleteUser(id)
+                        } else {
+                            showToastErrorUser(this@UserActivity)
+                        }
+                        hideLoading()
                     }
-                    hideLoading()
                 }
             }
+            dialog.show()
+
         }
 
     }

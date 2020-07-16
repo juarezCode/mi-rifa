@@ -43,7 +43,8 @@ class UserAdapter : RecyclerView.Adapter<UserAdapter.UserViewHolder>() {
     override fun onBindViewHolder(holder: UserAdapter.UserViewHolder, position: Int) {
         val user = differ.currentList[position]
         holder.itemView.apply {
-            txt_item_user_data.text = "${user.name} (${user.username})"
+            txt_item_user_name.text = "${user.name}"
+            txt_item_user_username.text = "(${user.username})"
 
 
             setOnClickListener {

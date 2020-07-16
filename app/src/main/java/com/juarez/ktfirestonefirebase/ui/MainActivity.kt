@@ -27,7 +27,10 @@ import com.juarez.ktfirestonefirebase.util.Messages.Companion.showSnackBarSucces
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastDowloading
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorFirestore
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorSearchTicket
+import com.juarez.ktfirestonefirebase.util.MyConstants.Companion.DIALOG_MESSAGE_DELETE_TICKET
 import com.juarez.ktfirestonefirebase.util.MyConstants.Companion.TITLE_MAIN_ACTIVITY
+import com.juarez.ktfirestonefirebase.util.MyDate.Companion.getCurrentDate
+import com.juarez.ktfirestonefirebase.util.MyDialog.Companion.showDialogTicketData
 import com.juarez.ktfirestonefirebase.viewmodels.TicketViewModel
 import com.juarez.ktfirestonefirebase.viewmodels.TicketViewModelProviderFactory
 import kotlinx.android.synthetic.main.activity_main.*
@@ -118,30 +121,31 @@ class MainActivity : AppCompatActivity() {
         }
 
         personAdapter.setOnItemClickListenerDelete {
-            showLoading()
-            CoroutineScope(IO).launch {
-                val personSaved = getPerson(it.ticketNumber)
-                withContext(Main) {
-                    if (personSaved != null) {
-                        deletePerson(id, personSaved)
-                    } else {
-                        showToastErrorSearchTicket(this@MainActivity)
+            val dialog = AlertDialog.Builder(this@MainActivity)
+                .setMessage(DIALOG_MESSAGE_DELETE_TICKET)
+            dialog.setNegativeButton("no") { dialog, _ ->
+                dialog.dismiss()
+            }
+            dialog.setPositiveButton("si") { dialog, _ ->
+                dialog.dismiss()
+                showLoading()
+                CoroutineScope(IO).launch {
+                    val personSaved = getPerson(it.ticketNumber)
+                    withContext(Main) {
+                        if (personSaved != null) {
+                            deletePerson(id, personSaved)
+                        } else {
+                            showToastErrorSearchTicket(this@MainActivity)
+                        }
+                        hideLoading()
                     }
-                    hideLoading()
                 }
             }
+            dialog.show()
         }
-        personAdapter.setOnItemClickListener {
-            var userUpload = ""
-            if (userIsAdmin)
-                userUpload = "\nagregado por: ${it.userUpload}"
 
-            AlertDialog.Builder(this)
-                .setMessage(
-                    "${it.name} ${it.firstSurname} ${it.secondSurname}" +
-                            "\n${it.phone}\n${it.address}" + userUpload
-                )
-                .show()
+        personAdapter.setOnItemClickListener {
+            showDialogTicketData(this@MainActivity, userIsAdmin, it)
         }
 
         if (userIsAdmin)
@@ -286,7 +290,8 @@ class MainActivity : AppCompatActivity() {
                     phone,
                     address,
                     ticketNumber.toInt(),
-                    userUsername ?: "Desconocido"
+                    userUsername ?: "Desconocido",
+                    getCurrentDate()
                 )
                 if (!isUpdate) {
                     savePerson(person, dialog, successMessage)

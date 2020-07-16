@@ -15,5 +15,6 @@ data class Person(
     val address: String = "",
     @PrimaryKey
     val ticketNumber: Int = -1,
-    val userUpload: String = ""
+    val userUpload: String = "",
+    val createDate: String = ""
 )
