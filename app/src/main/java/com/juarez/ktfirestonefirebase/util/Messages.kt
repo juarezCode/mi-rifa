@@ -1,6 +1,7 @@
 package com.juarez.ktfirestonefirebase.util
 
 import android.content.Context
+import android.view.Gravity
 import android.view.View
 import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
@@ -18,8 +19,9 @@ class Messages {
         }
 
         fun showToastDowloading(context: Context) {
-            Toast.makeText(context, "Descargando... por favor espere.", Toast.LENGTH_LONG)
-                .show()
+            val toast = Toast.makeText(context, "Descargando... por favor espere.", Toast.LENGTH_LONG)
+                toast.setGravity(Gravity.CENTER, 0, 0)
+                toast.show()
         }
 
         fun showToastErrorFirestore(context: Context, message: String) {

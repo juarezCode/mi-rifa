@@ -46,9 +46,9 @@ class PersonAdapter(val isAdmin: Boolean) : RecyclerView.Adapter<PersonAdapter.P
         val person = differ.currentList[position]
         holder.itemView.apply {
             txt_item_person_name.text =
-                "${person.name} ${person.firstSurname} ${person.secondSurname}"
+                "${person.name} ${person.firstSurname}"
 
-            txt_item_person_address.text = "De: ${person.address}"
+            txt_item_person_address.text = "${person.address}"
             txt_item_person_ticket_number.text = person.ticketNumber.toString()
             if (!isAdmin) {
                 item_person_btn_edit.visibility = View.GONE

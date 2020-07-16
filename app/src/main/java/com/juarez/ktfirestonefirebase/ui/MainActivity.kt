@@ -24,7 +24,6 @@ import com.juarez.ktfirestonefirebase.models.Person
 import com.juarez.ktfirestonefirebase.repository.TicketRepository
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showSnackBarSuccessDeletePerson
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showSnackBarSuccessUpsert
-import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastDowloading
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorFirestore
 import com.juarez.ktfirestonefirebase.util.Messages.Companion.showToastErrorSearchTicket
 import com.juarez.ktfirestonefirebase.util.MyConstants.Companion.DIALOG_MESSAGE_DELETE_TICKET
@@ -56,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     private var jobCreate: Job? = null
     private var jobGetTickets: Job? = null
     private var jobGetAllTickets: Job? = null
+    private lateinit var alertLoading: AlertDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -173,8 +173,7 @@ class MainActivity : AppCompatActivity() {
     private fun getAllTicketsFirestore() {
         jobGetAllTickets = CoroutineScope(IO).launch {
             withContext(Main) {
-                showToastDowloading(this@MainActivity)
-                showLoading()
+                showDialogDownloading()
             }
             try {
                 val querySnapshot = personCollectionRef.get().await()
@@ -187,7 +186,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     viewModel.savePersonsDB(persons)
                     withContext(Main) {
-                        hideLoading()
+                        alertLoading.dismiss()
                     }
                 }
             } catch (e: Exception) {
@@ -201,8 +200,7 @@ class MainActivity : AppCompatActivity() {
     private fun getTickets() {
         jobGetTickets = CoroutineScope(IO).launch {
             withContext(Main) {
-                showToastDowloading(this@MainActivity)
-                showLoading()
+                showDialogDownloading()
             }
 
             try {
@@ -226,7 +224,7 @@ class MainActivity : AppCompatActivity() {
                     personAdapter.differ.submitList(arrayListOf())
                 }
                 withContext(Main) {
-                    hideLoading()
+                    alertLoading.dismiss()
                 }
             } catch (e: Exception) {
                 withContext(Main) {
@@ -450,6 +448,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun hideLoading() {
         progress_bar_ticket.visibility = View.GONE
+    }
+
+    private fun showDialogDownloading() {
+        val dialogPerson =
+            LayoutInflater.from(this@MainActivity).inflate(R.layout.dialog_loading, null)
+        alertLoading = AlertDialog.Builder(this@MainActivity)
+            .setView(dialogPerson)
+            .setCancelable(false)
+            .show()
     }
 
     fun View.hideKeyboard() {
